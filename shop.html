@@ -1,0 +1,12 @@
+<!doctype html>
+<html lang="nl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Itemshop | Crown Quest</title><link rel="stylesheet" href="style.css"></head><body>
+<header><a class="brand" href="index.html">👑 CROWN <span>QUEST</span></a><div class="wallet">👑 <span data-coins>500</span> kroontjes</div></header>
+<nav>
+<a href="index.html" >🏠 Home</a><a href="levels.html" >🎮 Levels</a><a href="shop.html" class="active">🛍️ Shop</a><a href="collection.html" >🎒 Collectie</a><a href="battlepass.html" >🎟️ Battlepass</a><a href="market.html" >🤝 Markt</a>
+</nav><main>
+<div class="head"><div><h2>Itemshop</h2><p>Gebruik je kroontjes om crates te kopen en poppetjes te verzamelen.</p></div><span class="gold">👑 <b data-coins>500</b></span></div>
+<div class="grid">
+<article class="panel item"><div class="art">📦</div><span class="badge legendary">Speciale crate</span><h3>Turtle Heroes Crate</h3><p>Vijf tijdelijke turtle-thema helden. Elke crate geeft één willekeurig personage; zeldzame helden hebben een kleinere kans.</p><div class="item-foot"><span class="gold">👑 150</span><button onclick="buyCrate('turtle')">Open crate</button></div></article>
+<article class="panel item"><div class="art">🎁</div><span class="badge rare">Mystery crate</span><h3>Mini crate</h3><p>Een kleine verrassing met drie magische poppetjes en verschillende zeldzaamheden.</p><div class="item-foot"><span class="gold">👑 75</span><button onclick="buyCrate('mini')">Kopen & openen</button></div></article>
+<article class="panel item"><div class="art">🦊</div><span class="badge common">Starter</span><h3>Vosje</h3><p>Je eerste avonturier. Dit diertje is gratis en blijft altijd bij je.</p><div class="item-foot"><span class="gold">Gratis</span><button class="secondary" disabled>In bezit</button></div></article>
+</div><div class="notice">De Turtle-crate gebruikt tijdelijke emoji-concepten, geen officiële character-art. Voor een openbare game moet je rechten hebben voor beschermde personages en afbeeldingen.</div><div class="footer">Crown Quest browsergame-prototype. Voortgang wordt in deze browser opgeslagen. De markt is lokaal en niet gedeeld tussen spelers; echte online accounts, trading en gedeelde data vereisen een backend en database. Gebruik voor openbare publicatie alleen personages en afbeeldingen waarvoor je rechten hebt.</div></main><div id="toast" class="toast"></div><script src="app.js"></script></body></html>
