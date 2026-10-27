@@ -1,0 +1,11 @@
+<!doctype html>
+<html lang="nl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Markt & trade | Crown Quest</title><link rel="stylesheet" href="style.css"></head><body>
+<header><a class="brand" href="index.html">👑 CROWN <span>QUEST</span></a><div class="wallet">👑 <span data-coins>500</span> kroontjes</div></header>
+<nav>
+<a href="index.html" >🏠 Home</a><a href="levels.html" >🎮 Levels</a><a href="shop.html" >🛍️ Shop</a><a href="collection.html" >🎒 Collectie</a><a href="battlepass.html" >🎟️ Battlepass</a><a href="market.html" class="active">🤝 Markt</a>
+</nav><main>
+<div class="head"><div><h2>Markt & trade</h2><p>Een demo van kopen en verkopen binnen deze browser.</p></div><span class="badge rare">Demo</span></div>
+<div class="notice">Deze markt is nog niet online gedeeld. Aanbiedingen en eigendom bestaan alleen in jouw browser. Echte spelers, veilige transacties en online trading vereisen een backend-server en database.</div>
+<div class="panel rows" id="marketRows"></div>
+<div class="panel item" style="margin-top:15px"><h3>Een poppetje aanbieden</h3><p>Kies een poppetje uit je collectie en stel een prijs in kroontjes in.</p><div class="formrow"><select id="sellPet"></select><input type="number" id="sellPrice" min="1" max="10000" value="50" aria-label="Prijs in kroontjes"><button onclick="listPet()">Zet te koop</button></div></div>
+<div class="panel item" style="margin-top:15px"><h3>Speler tegen speler ruilen</h3><p>Online ruilen wordt pas echt mogelijk als er accounts, servervalidatie en bevestiging van beide spelers zijn aangesloten.</p><button class="secondary" onclick="notify('Online ruilen vereist een backend-server.')">Ruilsysteem bekijken</button></div><div class="footer">Crown Quest browsergame-prototype. Voortgang wordt in deze browser opgeslagen. De markt is lokaal en niet gedeeld tussen spelers; echte online accounts, trading en gedeelde data vereisen een backend en database. Gebruik voor openbare publicatie alleen personages en afbeeldingen waarvoor je rechten hebt.</div></main><div id="toast" class="toast"></div><script src="app.js"></script></body></html>
