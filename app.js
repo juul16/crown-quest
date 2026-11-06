@@ -1,533 +1,643 @@
-const DBKEY = 'crownQuestMultiPage_v1';
+```javascript
+(() => {
+  "use strict";
 
-const defaultState = {
+  const STORAGE_KEY = "crownQuestMultiPage_v1";
+
+  const CHARACTERS = [
+    { id: "knight", name: "Royal Knight", rarity: "Common", price: 0, emoji: "🛡️" },
+    { id: "wizard", name: "Mystic Wizard", rarity: "Rare", price: 250, emoji: "🧙" },
+    { id: "ninja", name: "Shadow Ninja", rarity: "Epic", price: 500, emoji: "🥷" },
+    { id: "dragon", name: "Golden Dragon", rarity: "Legendary", price: 1000, emoji: "🐉" },
+    { id: "king", name: "Crown King", rarity: "Mythic", price: 2000, emoji: "👑" }
+  ];
+
+  const SHOP_ITEMS = [
+    { id: "small_crown_pack", name: "Small Crown Pack", description: "A small crown boost.", price: 100, reward: 100, emoji: "👑" },
+    { id: "medium_crown_pack", name: "Medium Crown Pack", description: "A bigger crown boost.", price: 250, reward: 300, emoji: "💰" },
+    { id: "royal_crate", name: "Royal Crate", description: "Open a crate for a random reward.", price: 150, crate: true, emoji: "🎁" },
+    { id: "wizard", name: "Mystic Wizard", description: "Unlock a new character.", price: 250, character: "wizard", emoji: "🧙" },
+    { id: "ninja", name: "Shadow Ninja", description: "Unlock a rare character.", price: 500, character: "ninja", emoji: "🥷" },
+    { id: "dragon", name: "Golden Dragon", description: "Unlock a legendary character.", price: 1000, character: "dragon", emoji: "🐉" }
+  ];
+
+  const BATTLEPASS_REWARDS = [
+    { level: 1, xp: 0, name: "100 Crowns", type: "coins", amount: 100, emoji: "👑" },
+    { level: 2, xp: 100, name: "50 Crowns", type: "coins", amount: 50, emoji: "💰" },
+    { level: 3, xp: 200, name: "Royal Crate", type: "crate", amount: 1, emoji: "🎁" },
+    { level: 4, xp: 300, name: "100 Crowns", type: "coins", amount: 100, emoji: "👑" },
+    { level: 5, xp: 400, name: "Mystic Wizard", type: "character", amount: "wizard", emoji: "🧙" },
+    { level: 6, xp: 500, name: "200 Crowns", type: "coins", amount: 200, emoji: "💰" },
+    { level: 7, xp: 650, name: "Royal Crate", type: "crate", amount: 1, emoji: "🎁" },
+    { level: 8, xp: 800, name: "Shadow Ninja", type: "character", amount: "ninja", emoji: "🥷" },
+    { level: 9, xp: 1000, name: "300 Crowns", type: "coins", amount: 300, emoji: "👑" },
+    { level: 10, xp: 1250, name: "Golden Dragon", type: "character", amount: "dragon", emoji: "🐉" }
+  ];
+
+  const DEFAULT_STATE = {
     coins: 500,
     unlocked: 1,
     currentLevel: 1,
     xp: 0,
     wins: 0,
     claimed: [],
-    pets: [
-        {
-            id: 'starter-fox',
-            name: 'Vosje',
-            emoji: '🦊',
-            rarity: 'common',
-            desc: 'Je trouwe starter en eerste avonturier.'
-        }
-    ],
-    listings: []
-};
+    pets: ["knight"],
+    selectedCharacter: "knight",
+    listings: [],
+    completed: [],
+    playerName: "Player",
+    battlePassClaimed: [],
+    inventory: [],
+    crateHistory: []
+  };
 
-let gameState;
+  let state = loadState();
 
-try {
-    gameState = {
-        ...defaultState,
-        ...JSON.parse(localStorage.getItem(DBKEY) || '{}')
-    };
-} catch (e) {
-    gameState = { ...defaultState };
-}
-
-if (!Array.isArray(gameState.pets) || !gameState.pets.length) {
-    gameState.pets = [{ ...defaultState.pets[0] }];
-}
-
-if (!Array.isArray(gameState.listings)) gameState.listings = [];
-if (!Array.isArray(gameState.claimed)) gameState.claimed = [];
-
-const turtlePool = [
-    {
-        name: 'Rode Bandana Ninja',
-        emoji: '🥷',
-        rarity: 'legendary',
-        weight: 4,
-        desc: 'Een zeldzame ninjaheld met rode accenten.'
-    },
-    {
-        name: 'Blauwe Bandana Ninja',
-        emoji: '🐢',
-        rarity: 'epic',
-        weight: 10,
-        desc: 'Een dappere schildpadheld met blauwe accenten.'
-    },
-    {
-        name: 'Paarse Tech Ninja',
-        emoji: '🤖',
-        rarity: 'epic',
-        weight: 16,
-        desc: 'Een slimme techheld met paarse energie.'
-    },
-    {
-        name: 'Oranje Street Ninja',
-        emoji: '🍊',
-        rarity: 'rare',
-        weight: 25,
-        desc: 'Een snelle streetheld met oranje flair.'
-    },
-    {
-        name: 'Groene Turtle Rookie',
-        emoji: '💚',
-        rarity: 'common',
-        weight: 45,
-        desc: 'Een vrolijke groene nieuwkomer.'
+  function loadState() {
+    try {
+      const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+      return normalizeState(stored);
+    } catch (error) {
+      console.warn("Could not load Crown Quest save:", error);
+      return normalizeState({});
     }
-];
+  }
 
-const miniPool = [
-    {
-        name: 'Sterrenkat',
-        emoji: '🐱',
-        rarity: 'common',
-        weight: 55,
-        desc: 'Een kleine kat met een grote droom.'
-    },
-    {
-        name: 'Slijmgeest',
-        emoji: '👻',
-        rarity: 'rare',
-        weight: 30,
-        desc: 'Een wiebelige geestvriend.'
-    },
-    {
-        name: 'Kristaluil',
-        emoji: '🦉',
-        rarity: 'epic',
-        weight: 15,
-        desc: 'Een wijze uil met glinsterende veren.'
-    }
-];
+  function normalizeState(saved) {
+    const result = { ...DEFAULT_STATE, ...saved };
 
-const worldData = [
-    ['🌱', 'Groene heuvels'],
-    ['💎', 'Kristalbos'],
-    ['🌋', 'Lavakloof'],
-    ['☁️', 'Wolkeneiland'],
-    ['🌙', 'Maanvallei'],
-    ['❄️', 'IJsbergen'],
-    ['🍄', 'Paddenstoelenpad'],
-    ['⚡', 'Bliksemberg'],
-    ['🌌', 'Sterrenrijk'],
-    ['👑', 'Kroonpaleis']
-];
+    result.coins = Math.max(0, Number(result.coins) || 0);
+    result.xp = Math.max(0, Number(result.xp) || 0);
+    result.unlocked = Math.max(1, Math.min(210, Number(result.unlocked) || 1));
+    result.currentLevel = Math.max(1, Math.min(210, Number(result.currentLevel) || 1));
+    result.wins = Math.max(0, Number(result.wins) || 0);
 
-function saveState() {
-    localStorage.setItem(DBKEY, JSON.stringify(gameState));
-    updateSharedUI();
-}
-
-function notify(msg) {
-    let el = document.getElementById('toast');
-
-    if (!el) {
-        el = document.createElement('div');
-        el.id = 'toast';
-        el.className = 'toast';
-        document.body.appendChild(el);
+    for (const key of [
+      "claimed",
+      "pets",
+      "listings",
+      "completed",
+      "battlePassClaimed",
+      "inventory",
+      "crateHistory"
+    ]) {
+      if (!Array.isArray(result[key])) result[key] = [];
     }
 
-    el.textContent = msg;
-    el.classList.add('show');
+    if (!result.pets.includes("knight")) result.pets.unshift("knight");
 
-    clearTimeout(window.toastTimer);
-
-    window.toastTimer = setTimeout(() => {
-        el.classList.remove('show');
-    }, 2500);
-}
-
-function escapeText(s) {
-    return String(s).replace(/[&<>"']/g, c => ({
-        '&': '&amp;',
-        '<': '&lt;',
-        '>': '&gt;',
-        '"': '&quot;',
-        "'": '&#39;'
-    }[c]));
-}
-
-function pickWeighted(pool) {
-    let n = Math.random() * pool.reduce((a, x) => a + x.weight, 0);
-
-    for (const p of pool) {
-        n -= p.weight;
-
-        if (n < 0) return p;
+    if (!result.pets.includes(result.selectedCharacter)) {
+      result.selectedCharacter = "knight";
     }
 
-    return pool[pool.length - 1];
-}
+    return result;
+  }
 
-function addPet(p) {
-    const pet = {
-        ...p,
-        id: p.name.toLowerCase().replace(/[^a-z0-9]+/g, '-') +
-            '-' + Date.now() +
-            '-' + Math.floor(Math.random() * 9999)
-    };
+  function saveState() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    updateWallet();
+  }
 
-    delete pet.weight;
+  function notify(message) {
+    let element = document.getElementById("cqNotification");
 
-    gameState.pets.push(pet);
+    if (!element) {
+      element = document.createElement("div");
+      element.id = "cqNotification";
+      element.setAttribute("role", "status");
 
-    return pet;
-}
+      Object.assign(element.style, {
+        position: "fixed",
+        bottom: "22px",
+        left: "50%",
+        transform: "translateX(-50%)",
+        zIndex: "9999",
+        background: "#173c2b",
+        color: "#ffe29a",
+        padding: "13px 22px",
+        border: "1px solid #d8b75c",
+        borderRadius: "12px",
+        boxShadow: "0 6px 24px #0005",
+        fontWeight: "bold",
+        textAlign: "center",
+        maxWidth: "90vw"
+      });
 
-function buyCrate(type) {
-    const cost = type === 'turtle' ? 150 : 75;
-
-    if (gameState.coins < cost) {
-        notify('Niet genoeg kroontjes!');
-        return;
+      document.body.appendChild(element);
     }
 
-    gameState.coins -= cost;
+    element.textContent = message;
+    element.style.display = "block";
 
-    const pet = addPet(
-        pickWeighted(type === 'turtle' ? turtlePool : miniPool)
+    clearTimeout(notify.timer);
+    notify.timer = setTimeout(() => {
+      element.style.display = "none";
+    }, 2600);
+  }
+
+  function updateWallet() {
+    document.querySelectorAll("[data-coins], #coinBalance, #coins").forEach(element => {
+      element.textContent = state.coins.toLocaleString();
+    });
+
+    document.querySelectorAll("[data-xp], #xpBalance").forEach(element => {
+      element.textContent = state.xp.toLocaleString();
+    });
+
+    document.querySelectorAll("[data-wins]").forEach(element => {
+      element.textContent = state.wins.toLocaleString();
+    });
+  }
+
+  function getWorldNumber(level) {
+    return Math.min(10, Math.floor((level - 1) / 21) + 1);
+  }
+
+  function getLevelInWorld(level) {
+    return ((level - 1) % 21) + 1;
+  }
+
+  function isBossLevel(level) {
+    return getLevelInWorld(level) === 21;
+  }
+
+  function completeLevel(levelNumber, collectedCoins = 0) {
+    const level = Math.max(1, Math.min(210, Number(levelNumber) || 1));
+    const bonus = Math.max(0, Number(collectedCoins) || 0);
+    const firstCompletion = !state.completed.includes(level);
+
+    if (firstCompletion) {
+      state.completed.push(level);
+      state.wins += 1;
+      state.xp += 100;
+      state.coins += 50 + bonus;
+    } else {
+      state.coins += bonus;
+    }
+
+    state.unlocked = Math.max(state.unlocked, Math.min(210, level + 1));
+    state.currentLevel = Math.min(210, Math.max(state.currentLevel, level + 1));
+
+    saveState();
+    renderPage();
+
+    notify(
+      firstCompletion
+        ? `Level ${level} complete! +${100} XP and +${50 + bonus} Crowns!`
+        : `Replay complete! +${bonus} Crowns!`
     );
+  }
 
-    notify('Je kreeg ' + pet.name + ' (' + pet.rarity + ')!');
+  function buyItem(itemId) {
+    const item = SHOP_ITEMS.find(entry => entry.id === itemId);
+    if (!item) return notify("This item is unavailable.");
+
+    if (item.character && state.pets.includes(item.character)) {
+      return notify("You already own this character.");
+    }
+
+    if (state.coins < item.price) {
+      return notify("Not enough Crowns!");
+    }
+
+    state.coins -= item.price;
+
+    if (item.reward) {
+      state.coins += item.reward;
+      notify(`Purchase complete! You received ${item.reward} Crowns.`);
+    } else if (item.character) {
+      state.pets.push(item.character);
+      notify(`${item.name} unlocked!`);
+    } else if (item.crate) {
+      const reward = openCrateReward(false);
+      notify(`Crate opened! ${reward.name} (${reward.rarity}).`);
+    }
 
     saveState();
     renderPage();
-}
+  }
 
-function selectShowcase(id) {
-    const p = gameState.pets.find(x => x.id === id);
+  function getCrateReward() {
+    const roll = Math.random() * 100;
 
-    if (p) {
-        localStorage.setItem('crownQuestShowcase', p.emoji);
-        notify(p.name + ' geselecteerd!');
-        updateSharedUI();
-    }
-}
-
-function listPet() {
-    const id = document.getElementById('sellPet')?.value;
-    const price = Math.floor(
-        Number(document.getElementById('sellPrice')?.value)
-    );
-
-    const pet = gameState.pets.find(p => p.id === id);
-
-    if (!pet) {
-        notify('Kies een poppetje.');
-        return;
+    if (roll < 55) {
+      return { rarity: "Common", name: "100 Crowns", type: "coins", amount: 100, emoji: "👑" };
     }
 
-    if (pet.id === 'starter-fox') {
-        notify('Je starterpoppetje blijft bij je.');
-        return;
+    if (roll < 82) {
+      return { rarity: "Rare", name: "250 Crowns", type: "coins", amount: 250, emoji: "💰" };
     }
 
-    if (!Number.isFinite(price) || price < 1 || price > 10000) {
-        notify('Kies een prijs van 1 tot 10.000.');
-        return;
+    if (roll < 95) {
+      return { rarity: "Epic", name: "Mystic Wizard", type: "character", amount: "wizard", emoji: "🧙" };
     }
 
-    gameState.pets = gameState.pets.filter(p => p.id !== id);
+    if (roll < 99) {
+      return { rarity: "Legendary", name: "Golden Dragon", type: "character", amount: "dragon", emoji: "🐉" };
+    }
 
-    gameState.listings.push({
-        id: 'listing-' + Date.now(),
-        pet,
-        price
+    return { rarity: "Mythic", name: "Crown King", type: "character", amount: "king", emoji: "👑" };
+  }
+
+  function openCrateReward(chargeCoins = true) {
+    if (chargeCoins) {
+      if (state.coins < 150) {
+        notify("Not enough Crowns for a crate!");
+        return null;
+      }
+      state.coins -= 150;
+    }
+
+    const reward = getCrateReward();
+
+    if (reward.type === "coins") {
+      state.coins += reward.amount;
+    } else if (!state.pets.includes(reward.amount)) {
+      state.pets.push(reward.amount);
+    } else {
+      state.coins += 150;
+      reward.name = "Duplicate character compensation: 150 Crowns";
+    }
+
+    state.crateHistory.unshift({
+      name: reward.name,
+      rarity: reward.rarity,
+      date: new Date().toISOString()
     });
 
-    notify(pet.name + ' staat te koop op jouw lokale demo-markt.');
+    state.crateHistory = state.crateHistory.slice(0, 20);
+    saveState();
+
+    return reward;
+  }
+
+  function openCrate() {
+    const result = openCrateReward(true);
+    if (!result) return;
+
+    const resultElement = document.getElementById("crateResult");
+
+    if (resultElement) {
+      resultElement.innerHTML = `
+        <div class="crate-result">
+          <div style="font-size:52px">${result.emoji}</div>
+          <h2>${escapeHTML(result.name)}</h2>
+          <p class="rarity-${result.rarity.toLowerCase()}">
+            ${escapeHTML(result.rarity)} Reward
+          </p>
+        </div>
+      `;
+    }
+
+    notify(`${result.rarity} reward: ${result.name}!`);
+    renderPage();
+  }
+
+  function selectCharacter(characterId) {
+    if (!state.pets.includes(characterId)) {
+      return notify("You have not unlocked this character yet.");
+    }
+
+    state.selectedCharacter = characterId;
+    saveState();
+    renderPage();
+    notify("Character selected!");
+  }
+
+  function claimBattlePass(level) {
+    const reward = BATTLEPASS_REWARDS.find(item => item.level === Number(level));
+    if (!reward) return;
+
+    if (state.xp < reward.xp) {
+      return notify("You need more XP to unlock this reward.");
+    }
+
+    if (state.battlePassClaimed.includes(reward.level)) {
+      return notify("You already claimed this reward.");
+    }
+
+    if (reward.type === "coins") {
+      state.coins += reward.amount;
+    } else if (reward.type === "character") {
+      if (!state.pets.includes(reward.amount)) {
+        state.pets.push(reward.amount);
+      } else {
+        state.coins += 150;
+      }
+    } else if (reward.type === "crate") {
+      const result = openCrateReward(false);
+      if (result) notify(`Battle Pass crate: ${result.name}!`);
+    }
+
+    state.battlePassClaimed.push(reward.level);
+    saveState();
+    renderPage();
+    notify(`${reward.name} claimed!`);
+  }
+
+  function createListing() {
+    const nameInput = document.getElementById("listingName");
+    const priceInput = document.getElementById("listingPrice");
+
+    if (!nameInput || !priceInput) return;
+
+    const name = nameInput.value.trim();
+    const price = Math.floor(Number(priceInput.value));
+
+    if (!name || !Number.isFinite(price) || price < 1) {
+      return notify("Enter a valid item name and price.");
+    }
+
+    if (price > state.coins) {
+      return notify("You cannot list an item for more Crowns than you own.");
+    }
+
+    state.listings.push({
+      id: `${Date.now()}_${Math.random().toString(16).slice(2)}`,
+      name,
+      price,
+      seller: state.playerName || "Player",
+      created: new Date().toISOString()
+    });
 
     saveState();
     renderPage();
-}
+    notify("Your listing has been created.");
+  }
 
-function buyListing(id) {
-    const l = gameState.listings.find(x => x.id === id);
+  function buyListing(id) {
+    const listing = state.listings.find(item => item.id === id);
+    if (!listing) return notify("This listing is no longer available.");
 
-    if (!l) return;
-
-    if (gameState.coins < l.price) {
-        notify('Niet genoeg kroontjes!');
-        return;
+    if (listing.seller === state.playerName) {
+      return notify("You cannot buy your own listing.");
     }
 
-    gameState.coins -= l.price;
+    if (state.coins < listing.price) {
+      return notify("Not enough Crowns!");
+    }
 
-    gameState.pets.push({
-        ...l.pet,
-        id: l.pet.id + '-buy-' + Date.now()
+    state.coins -= listing.price;
+    state.inventory.push({
+      name: listing.name,
+      boughtFor: listing.price,
+      date: new Date().toISOString()
     });
 
-    gameState.listings = gameState.listings.filter(
-        x => x.id !== id
-    );
-
-    notify('Je kocht ' + l.pet.name + '!');
+    state.listings = state.listings.filter(item => item.id !== id);
 
     saveState();
     renderPage();
-}
+    notify(`${listing.name} purchased!`);
+  }
 
-function updateSharedUI() {
-    document.querySelectorAll('[data-coins]').forEach(e => {
-        e.textContent = gameState.coins;
-    });
-
-    document.querySelectorAll('[data-pet-count]').forEach(e => {
-        e.textContent = gameState.pets.length;
-    });
-
-    document.querySelectorAll('[data-unlocked]').forEach(e => {
-        e.textContent = gameState.unlocked;
-    });
-
-    document.querySelectorAll('[data-showcase]').forEach(e => {
-        e.textContent =
-            localStorage.getItem('crownQuestShowcase') ||
-            gameState.pets[0]?.emoji ||
-            '🦊';
-    });
-}
-
-function renderCollection() {
-    const grid = document.getElementById('collectionGrid');
-
-    if (!grid) return;
-
-    const count = document.getElementById('petCount');
-
-    if (count) {
-        count.textContent =
-            gameState.pets.length +
-            ' poppetje' +
-            (gameState.pets.length === 1 ? '' : 's');
-    }
-
-    grid.innerHTML = gameState.pets.map(p => `
-        <article class="panel item">
-            <div class="art">${p.emoji}</div>
-            <span class="badge ${p.rarity}">${escapeText(p.rarity)}</span>
-            <h3>${escapeText(p.name)}</h3>
-            <p>${escapeText(p.desc || 'Een verzamelpoppetje.')}</p>
-            <div class="item-foot">
-                <span class="small">In collectie</span>
-                <button class="secondary"
-                    onclick="selectShowcase('${p.id}')">
-                    Selecteer
-                </button>
-            </div>
-        </article>
-    `).join('');
-
-    const sel = document.getElementById('sellPet');
-
-    if (sel) {
-        const old = sel.value;
-
-        sel.innerHTML = gameState.pets.map(p => `
-            <option value="${p.id}">
-                ${escapeText(p.name)} ${p.emoji}
-            </option>
-        `).join('');
-
-        if (gameState.pets.some(p => p.id === old)) {
-            sel.value = old;
-        }
-    }
-}
-
-function renderMarket() {
-    const rows = document.getElementById('marketRows');
-
-    if (!rows) return;
-
-    rows.innerHTML = gameState.listings.length
-        ? gameState.listings.map(l => `
-            <div class="row">
-                <div class="rowicon">${l.pet.emoji}</div>
-
-                <div class="rowinfo">
-                    <b>${escapeText(l.pet.name)}</b>
-                    <p>
-                        <span class="badge ${l.pet.rarity}">
-                            ${escapeText(l.pet.rarity)}
-                        </span>
-                        · Lokale demo-aanbieding
-                    </p>
-                </div>
-
-                <b class="gold">👑 ${l.price}</b>
-
-                <button onclick="buyListing('${l.id}')">
-                    Kopen
-                </button>
-            </div>
-        `).join('')
-        : `
-            <div class="empty">
-                De markt is leeg. Zet een poppetje te koop
-                om dit demo-systeem te testen.
-            </div>
-        `;
-}
-
-function claimReward(n) {
-    if (
-        gameState.claimed.includes(n) ||
-        Math.floor(gameState.xp / 100) + 1 < n
-    ) {
-        return;
-    }
-
-    gameState.claimed.push(n);
-
-    const rewards = {
-        1: { coins: 25 },
-        2: { pet: { name: 'Kikkermaatje', emoji: '🐸', rarity: 'common' } },
-        3: { coins: 50 },
-        4: { pet: { name: 'Kristaluil', emoji: '🦉', rarity: 'epic' } },
-        5: { crate: 'mini' },
-        6: { pet: { name: 'Mini-draak', emoji: '🐲', rarity: 'rare' } },
-        7: { coins: 100 },
-        8: { pet: { name: 'Sterren-eenhoorn', emoji: '🦄', rarity: 'epic' } },
-        9: { crate: 'turtle' },
-        10: { pet: { name: 'Kroonmeester', emoji: '👑', rarity: 'legendary' } }
-    };
-
-    const r = rewards[n];
-
-    if (r.coins) {
-        gameState.coins += r.coins;
-    }
-
-    if (r.pet) {
-        addPet({
-            ...r.pet,
-            desc: 'Battlepassbeloning uit Crown Valley.'
-        });
-    }
-
-    if (r.crate) {
-        addPet(
-            pickWeighted(r.crate === 'mini' ? miniPool : turtlePool)
-        );
-    }
-
-    notify('Battlepassbeloning geclaimd!');
-
-    saveState();
-    renderPage();
-}
-
-function renderBattlepass() {
-    const grid = document.getElementById('passGrid');
-
-    if (!grid) return;
-
-    const level = Math.min(10, Math.floor(gameState.xp / 100) + 1);
-    const xp = gameState.xp % 100;
-
-    document.getElementById('bpLevel').textContent = level;
-    document.getElementById('bpXp').textContent = xp + ' / 100';
-    document.getElementById('bpBar').style.width = xp + '%';
-
-    const rewards = [
-        ['🪙', '25 kroontjes'],
-        ['🐸', 'Kikkermaatje'],
-        ['🪙', '50 kroontjes'],
-        ['🦉', 'Kristaluil'],
-        ['📦', 'Mini crate'],
-        ['🐲', 'Mini-draak'],
-        ['🪙', '100 kroontjes'],
-        ['🦄', 'Sterren-eenhoorn'],
-        ['📦', 'Turtle crate'],
-        ['👑', 'Kroonmeester']
-    ];
-
-    grid.innerHTML = rewards.map((r, i) => {
-        const n = i + 1;
-        const ready = level >= n;
-        const claimed = gameState.claimed.includes(n);
-
-        return `
-            <article class="panel item">
-                <div class="art">${r[0]}</div>
-                <span class="badge ${n > 7 ? 'epic' : 'common'}">
-                    Niveau ${n}
-                </span>
-                <h3>${r[1]}</h3>
-                <p>
-                    ${ready
-                        ? 'Beloning beschikbaar.'
-                        : 'Haal levels om XP te verdienen.'}
-                </p>
-                <button
-                    ${!ready || claimed ? 'disabled' : ''}
-                    onclick="claimReward(${n})">
-                    ${claimed
-                        ? 'Geclaimd'
-                        : ready
-                            ? 'Claim beloning'
-                            : 'Vergrendeld'}
-                </button>
-            </article>
-        `;
-    }).join('');
-}
-
-function renderLevels() {
-    const map = document.getElementById('levelMap');
-
+  function renderLevels() {
+    const map = document.getElementById("levelMap");
     if (!map) return;
 
-    map.innerHTML = worldData.map((w, i) => {
-        const n = i + 1;
-        const locked = n > gameState.unlocked;
+    map.innerHTML = "";
 
-        return `
-            <div class="leveltile
-                ${n === gameState.currentLevel ? 'current' : ''}
-                ${locked ? 'locked' : ''}"
-                ${locked ? '' : `onclick="selectLevel(${n})"`}>
-                <b>${locked ? '🔒' : w[0]}</b>
-                <span>Level ${n}</span>
-            </div>
-        `;
-    }).join('');
+    for (let world = 1; world <= 10; world++) {
+      const heading = document.createElement("h2");
+      heading.className = "world-heading";
+      heading.textContent = `World ${world} — ${getWorldName(world)}`;
+      map.appendChild(heading);
 
-    document.getElementById('levelLabel').textContent =
-        'Level ' + gameState.currentLevel;
+      const grid = document.createElement("div");
+      grid.className = "level-grid";
 
-    document.getElementById('worldName').textContent =
-        worldData[gameState.currentLevel - 1][0] +
-        ' ' +
-        worldData[gameState.currentLevel - 1][1];
-}
+      for (let localLevel = 1; localLevel <= 21; localLevel++) {
+        const number = (world - 1) * 21 + localLevel;
+        const unlocked = number <= state.unlocked;
+        const completed = state.completed.includes(number);
+        const boss = localLevel === 21;
 
-function selectLevel(n) {
-    if (n > gameState.unlocked) return;
+        const tile = document.createElement("button");
+        tile.type = "button";
+        tile.className = `leveltile${boss ? " boss" : ""}${completed ? " completed" : ""}${unlocked ? "" : " locked"}`;
+        tile.disabled = !unlocked;
+        tile.textContent = boss ? "👹 BOSS" : String(number);
+        tile.setAttribute("aria-label", `Level ${number}${boss ? ", boss level" : ""}`);
 
-    gameState.currentLevel = n;
+        if (unlocked) {
+          tile.addEventListener("click", () => {
+            state.currentLevel = number;
+            saveState();
+            notify(`Level ${number} selected. Press Start Level!`);
+            const label = document.getElementById("levelLabel");
+            if (label) label.textContent = `Level ${number}`;
+          });
+        }
 
-    renderLevels();
+        grid.appendChild(tile);
+      }
 
-    if (typeof startLevel === 'function') {
-        startLevel();
+      map.appendChild(grid);
     }
-}
+  }
 
-function renderPage() {
-    updateSharedUI();
+  function getWorldName(world) {
+    const names = [
+      "Emerald Fields", "Desert Kingdom", "Frozen Peaks",
+      "Magma Realm", "Sky Islands", "Mystic Forest",
+      "Crystal Caves", "Storm Citadel", "Shadow Realm",
+      "Crown Castle"
+    ];
+
+    return names[world - 1];
+  }
+
+  function renderShop() {
+    const container = document.getElementById("shopItems");
+    if (!container) return;
+
+    container.innerHTML = "";
+
+    SHOP_ITEMS.forEach(item => {
+      const owned = item.character && state.pets.includes(item.character);
+      const card = document.createElement("article");
+      card.className = "shop-card";
+
+      card.innerHTML = `
+        <div class="shop-emoji">${item.emoji}</div>
+        <h3>${escapeHTML(item.name)}</h3>
+        <p>${escapeHTML(item.description)}</p>
+        <strong>👑 ${item.price}</strong>
+        <button type="button" ${owned ? "disabled" : ""}>
+          ${owned ? "Owned" : "Buy"}
+        </button>
+      `;
+
+      card.querySelector("button").addEventListener("click", () => buyItem(item.id));
+      container.appendChild(card);
+    });
+
+    const roulette = document.getElementById("crateButton");
+    if (roulette) roulette.onclick = openCrate;
+  }
+
+  function renderCollection() {
+    const container = document.getElementById("collectionItems");
+    if (!container) return;
+
+    container.innerHTML = "";
+
+    CHARACTERS.forEach(character => {
+      const owned = state.pets.includes(character.id);
+      const selected = state.selectedCharacter === character.id;
+
+      const card = document.createElement("article");
+      card.className = "collection-card";
+
+      card.innerHTML = `
+        <div class="character-emoji">${character.emoji}</div>
+        <h3>${escapeHTML(character.name)}</h3>
+        <p>${escapeHTML(character.rarity)}</p>
+        <button type="button" ${!owned || selected ? "disabled" : ""}>
+          ${selected ? "Selected" : owned ? "Select Character" : "Locked"}
+        </button>
+      `;
+
+      card.querySelector("button").addEventListener("click", () => {
+        selectCharacter(character.id);
+      });
+
+      container.appendChild(card);
+    });
+  }
+
+  function renderBattlePass() {
+    const container = document.getElementById("battlepassRewards");
+    if (!container) return;
+
+    container.innerHTML = "";
+
+    BATTLEPASS_REWARDS.forEach(reward => {
+      const claimed = state.battlePassClaimed.includes(reward.level);
+      const unlocked = state.xp >= reward.xp;
+
+      const card = document.createElement("article");
+      card.className = "battlepass-card";
+
+      card.innerHTML = `
+        <div class="battlepass-emoji">${reward.emoji}</div>
+        <h3>Tier ${reward.level}</h3>
+        <p>${escapeHTML(reward.name)}</p>
+        <small>${reward.xp} XP required</small>
+        <button type="button" ${claimed || !unlocked ? "disabled" : ""}>
+          ${claimed ? "Claimed" : unlocked ? "Claim Reward" : "Locked"}
+        </button>
+      `;
+
+      card.querySelector("button").addEventListener("click", () => {
+        claimBattlePass(reward.level);
+      });
+
+      container.appendChild(card);
+    });
+
+    const xpDisplay = document.getElementById("battlepassXP");
+    if (xpDisplay) xpDisplay.textContent = state.xp.toLocaleString();
+  }
+
+  function renderMarket() {
+    const container = document.getElementById("marketListings");
+    if (!container) return;
+
+    container.innerHTML = "";
+
+    if (state.listings.length === 0) {
+      container.textContent = "No listings available yet.";
+      return;
+    }
+
+    state.listings.forEach(listing => {
+      const card = document.createElement("article");
+      card.className = "market-card";
+
+      card.innerHTML = `
+        <h3>${escapeHTML(listing.name)}</h3>
+        <p>Seller: ${escapeHTML(listing.seller)}</p>
+        <strong>👑 ${listing.price}</strong>
+        <button type="button">Buy</button>
+      `;
+
+      card.querySelector("button").addEventListener("click", () => {
+        buyListing(listing.id);
+      });
+
+      container.appendChild(card);
+    });
+  }
+
+  function renderProfile() {
+    document.querySelectorAll("[data-player-name]").forEach(element => {
+      element.textContent = state.playerName;
+    });
+
+    document.querySelectorAll("[data-current-level]").forEach(element => {
+      element.textContent = state.currentLevel;
+    });
+
+    document.querySelectorAll("[data-unlocked-level]").forEach(element => {
+      element.textContent = state.unlocked;
+    });
+
+    document.querySelectorAll("[data-completed-levels]").forEach(element => {
+      element.textContent = state.completed.length;
+    });
+  }
+
+  function renderPage() {
+    updateWallet();
+    renderProfile();
+    renderLevels();
+    renderShop();
     renderCollection();
+    renderBattlePass();
     renderMarket();
-    renderBattlepass();
-    renderLevels();
-}
+  }
 
-document.addEventListener('DOMContentLoaded', () => {
-    renderPage();
+  function escapeHTML(value) {
+    return String(value).replace(/[&<>"']/g, character => ({
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#39;"
+    })[character]);
+  }
 
-    if (document.getElementById('game')) {
-        initGame();
-    }
-});
+  window.CrownQuest = {
+    get state() {
+      return { ...state, pets: [...state.pets], completed: [...state.completed] };
+    },
+    saveState,
+    loadState,
+    notify,
+    buyItem,
+    openCrate,
+    selectCharacter,
+    claimBattlePass,
+    createListing,
+    buyListing,
+    renderPage,
+    getWorldNumber,
+    getLevelInWorld,
+    isBossLevel
+  };
+
+  window.saveState = saveState;
+  window.notify = notify;
+  window.completeLevel = completeLevel;
+  window.renderPage = renderPage;
+  window.updateWallet = updateWallet;
+  window.updateLeaderboard = renderProfile;
+  window.openCrate = openCrate;
+  window.selectCharacter = selectCharacter;
+  window.claimBattlePass = claimBattlePass;
+  window.createListing = createListing;
+  window.buyListing = buyListing;
+
+  document.addEventListener("DOMContentLoaded", renderPage);
+})();
