@@ -1,11 +1,81 @@
 <!doctype html>
-<html lang="nl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Markt & trade | Crown Quest</title><link rel="stylesheet" href="style.css"></head><body>
-<header><a class="brand" href="index.html">👑 CROWN <span>QUEST</span></a><div class="wallet">👑 <span data-coins>500</span> kroontjes</div></header>
-<nav>
-<a href="index.html" >🏠 Home</a><a href="levels.html" >🎮 Levels</a><a href="shop.html" >🛍️ Shop</a><a href="collection.html" >🎒 Collectie</a><a href="battlepass.html" >🎟️ Battlepass</a><a href="market.html" class="active">🤝 Markt</a>
-</nav><main>
-<div class="head"><div><h2>Markt & trade</h2><p>Een demo van kopen en verkopen binnen deze browser.</p></div><span class="badge rare">Demo</span></div>
-<div class="notice">Deze markt is nog niet online gedeeld. Aanbiedingen en eigendom bestaan alleen in jouw browser. Echte spelers, veilige transacties en online trading vereisen een backend-server en database.</div>
-<div class="panel rows" id="marketRows"></div>
-<div class="panel item" style="margin-top:15px"><h3>Een poppetje aanbieden</h3><p>Kies een poppetje uit je collectie en stel een prijs in kroontjes in.</p><div class="formrow"><select id="sellPet"></select><input type="number" id="sellPrice" min="1" max="10000" value="50" aria-label="Prijs in kroontjes"><button onclick="listPet()">Zet te koop</button></div></div>
-<div class="panel item" style="margin-top:15px"><h3>Speler tegen speler ruilen</h3><p>Online ruilen wordt pas echt mogelijk als er accounts, servervalidatie en bevestiging van beide spelers zijn aangesloten.</p><button class="secondary" onclick="notify('Online ruilen vereist een backend-server.')">Ruilsysteem bekijken</button></div><div class="footer">Crown Quest browsergame-prototype. Voortgang wordt in deze browser opgeslagen. De markt is lokaal en niet gedeeld tussen spelers; echte online accounts, trading en gedeelde data vereisen een backend en database. Gebruik voor openbare publicatie alleen personages en afbeeldingen waarvoor je rechten hebt.</div></main><div id="toast" class="toast"></div><script src="app.js"></script></body></html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Market — Crown Quest</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <h1>🏪 Crown Quest Market</h1>
+    <div>👑 <span data-coins>500</span></div>
+  </header>
+
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="levels.html">Levels</a>
+    <a href="shop.html">Shop</a>
+    <a href="collection.html">Collection</a>
+    <a href="battlepass.html">Battle Pass</a>
+    <a href="market.html">Market</a>
+  </nav>
+
+  <main class="container">
+    <section>
+      <h2>Create a Listing</h2>
+      <p>List an item for other players to browse.</p>
+
+      <form id="listingForm">
+        <label for="listingName">Item name</label>
+        <input id="listingName" type="text" maxlength="40" placeholder="Enter item name" required>
+
+        <label for="listingPrice">Price in Crowns</label>
+        <input id="listingPrice" type="number" min="1" max="100000" placeholder="Enter price" required>
+
+        <button type="submit">Create Listing</button>
+      </form>
+    </section>
+
+    <section>
+      <h2>Available Listings</h2>
+      <div id="marketListings"></div>
+    </section>
+
+    <section>
+      <h2>Your Inventory</h2>
+      <ul id="inventoryItems"></ul>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      document.getElementById("listingForm").addEventListener("submit", event => {
+        event.preventDefault();
+        window.createListing();
+      });
+
+      const inventory = document.getElementById("inventoryItems");
+
+      function renderInventory() {
+        const items = window.CrownQuest.state.inventory;
+        inventory.innerHTML = "";
+
+        if (!items.length) {
+          inventory.textContent = "Your inventory is empty.";
+          return;
+        }
+
+        items.forEach(item => {
+          const li = document.createElement("li");
+          li.textContent = `${item.name} — bought for ${item.boughtFor} Crowns`;
+          inventory.appendChild(li);
+        });
+      }
+
+      renderInventory();
+    });
+  </script>
+</body>
+</html>
