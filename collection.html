@@ -1,7 +1,63 @@
 <!doctype html>
-<html lang="nl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Collectie | Crown Quest</title><link rel="stylesheet" href="style.css"></head><body>
-<header><a class="brand" href="index.html">👑 CROWN <span>QUEST</span></a><div class="wallet">👑 <span data-coins>500</span> kroontjes</div></header>
-<nav>
-<a href="index.html" >🏠 Home</a><a href="levels.html" >🎮 Levels</a><a href="shop.html" >🛍️ Shop</a><a href="collection.html" class="active">🎒 Collectie</a><a href="battlepass.html" >🎟️ Battlepass</a><a href="market.html" >🤝 Markt</a>
-</nav><main>
-<div class="head"><div><h2>Mijn collectie</h2><p>Bekijk je poppetjes en kies wie op je startscherm verschijnt.</p></div><span class="badge common" id="petCount">1 poppetje</span></div><div class="grid" id="collectionGrid"></div><div class="footer">Crown Quest browsergame-prototype. Voortgang wordt in deze browser opgeslagen. De markt is lokaal en niet gedeeld tussen spelers; echte online accounts, trading en gedeelde data vereisen een backend en database. Gebruik voor openbare publicatie alleen personages en afbeeldingen waarvoor je rechten hebt.</div></main><div id="toast" class="toast"></div><script src="app.js"></script></body></html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Collection — Crown Quest</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <h1>🧍 Character Collection</h1>
+    <div>👑 <span data-coins>500</span></div>
+  </header>
+
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="levels.html">Levels</a>
+    <a href="shop.html">Shop</a>
+    <a href="collection.html">Collection</a>
+    <a href="battlepass.html">Battle Pass</a>
+    <a href="market.html">Market</a>
+  </nav>
+
+  <main class="container">
+    <h2>Your Characters</h2>
+    <p>Choose an unlocked character for your adventure.</p>
+
+    <section class="selected-character">
+      <h3>Currently Selected</h3>
+      <p id="selectedCharacterName">Royal Knight</p>
+    </section>
+
+    <div id="collectionItems" class="collection-grid"></div>
+
+    <p>Want more characters? Visit the <a href="shop.html">Shop</a>.</p>
+  </main>
+
+  <script src="app.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const names = {
+        knight: "Royal Knight 🛡️",
+        wizard: "Mystic Wizard 🧙",
+        ninja: "Shadow Ninja 🥷",
+        dragon: "Golden Dragon 🐉",
+        king: "Crown King 👑"
+      };
+
+      const updateSelected = () => {
+        const selected = window.CrownQuest.state.selectedCharacter;
+        document.getElementById("selectedCharacterName").textContent =
+          names[selected] || "Royal Knight";
+      };
+
+      updateSelected();
+
+      const container = document.getElementById("collectionItems");
+      const observer = new MutationObserver(updateSelected);
+      observer.observe(container, { childList: true, subtree: true });
+    });
+  </script>
+</body>
+</html>
